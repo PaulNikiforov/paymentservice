@@ -17,11 +17,23 @@ mongock:
   migration-scan-package:
     - com.innowise.paymentservice.migration
 
+resilience4j:
+  circuitbreaker:
+    instances:
+      externalPaymentApi:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+
 payment:
   outbox:
     poll-interval-ms: ${PAYMENT_OUTBOX_POLL_INTERVAL_MS:2000}
   external-api:
     url: ${EXTERNAL_PAYMENT_API_URL}
+    connect-timeout-ms: ${PAYMENT_EXTERNAL_API_CONNECT_TIMEOUT_MS:2000}
+    read-timeout-ms: ${PAYMENT_EXTERNAL_API_READ_TIMEOUT_MS:5000}
 
 management:
   endpoints:
