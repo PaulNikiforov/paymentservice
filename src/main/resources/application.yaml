@@ -1,3 +1,39 @@
 spring:
   application:
     name: paymentservice
+
+  data:
+    mongodb:
+      uri: ${MONGO_URI}
+      auto-index-creation: false
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+mongock:
+  migration-scan-package:
+    - com.innowise.paymentservice.migration
+
+payment:
+  outbox:
+    poll-interval-ms: ${PAYMENT_OUTBOX_POLL_INTERVAL_MS:2000}
+  external-api:
+    url: ${EXTERNAL_PAYMENT_API_URL}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: never
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
