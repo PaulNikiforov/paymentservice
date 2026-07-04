@@ -6,6 +6,12 @@ import com.innowise.paymentservice.service.dto.PaymentFilter;
 import com.innowise.paymentservice.service.dto.PaymentRequest;
 import com.innowise.paymentservice.service.dto.PaymentResponse;
 import com.innowise.paymentservice.service.dto.PaymentSummaryResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
@@ -24,9 +30,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST API for payment creation, retrieval, and success-payment summaries.
+ *
+ * <p>Identity is read from the validated JWT (claims {@code sub}/{@code role}, see
+ * {@link com.innowise.paymentservice.config.SecurityConfig}) — regular users may only access
+ * their own payments/summary, admins may access any. Ownership checks that depend on the
+ * fetched document (e.g. {@link #getById}) are enforced in the service layer, not here;
+ * role-only checks that need no document data use {@code @PreAuthorize}.
+ */
 @RestController
 @RequestMapping("/api/v1/payments")
 @RequiredArgsConstructor
+@Tag(name = "Payments", description = "Payment creation, retrieval, and success-payment summaries")
+@SecurityRequirement(name = "bearerAuth")
 public class PaymentController {
 
     private static final String CLAIM_SUB = "sub";
@@ -38,12 +55,25 @@ public class PaymentController {
     @PostMapping
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
+    @Operation(summary = "Create a payment", description = "Saves the payment as PENDING; resolution to SUCCESS/FAILED happens asynchronously.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "202", description = "Payment accepted, processing is asynchronous"),
+            @ApiResponse(responseCode = "400", description = "Validation error (missing orderId, non-positive paymentAmount)"),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
+    })
     public PaymentResponse create(@Valid @RequestBody PaymentRequest request,
                                    @AuthenticationPrincipal Jwt jwt) {
         return paymentService.create(request, callerUserId(jwt));
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get a payment by id", description = "USER may only fetch their own payment; ADMIN may fetch any.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Payment found"),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
+            @ApiResponse(responseCode = "403", description = "USER requesting another user's payment"),
+            @ApiResponse(responseCode = "404", description = "Payment id does not exist")
+    })
     public PaymentResponse getById(@PathVariable String id,
                                     @AuthenticationPrincipal Jwt jwt) {
         return paymentService.getById(id, callerUserId(jwt), isAdmin(jwt));
@@ -51,9 +81,15 @@ public class PaymentController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
-    public Page<PaymentResponse> list(@RequestParam(required = false) String orderId,
-                                       @RequestParam(required = false) PaymentStatus status,
-                                       @RequestParam(required = false) String userId,
+    @Operation(summary = "List payments", description = "USER is always scoped to their own payments regardless of the userId filter; ADMIN may filter by any userId or omit it for all.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Paged list of payments"),
+            @ApiResponse(responseCode = "400", description = "Invalid status filter value"),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
+    })
+    public Page<PaymentResponse> list(@RequestParam(required = false) @Parameter(description = "Filter by order id") String orderId,
+                                       @RequestParam(required = false) @Parameter(description = "Filter by payment status") PaymentStatus status,
+                                       @RequestParam(required = false) @Parameter(description = "ADMIN-only: filter by owner user id") String userId,
                                        @AuthenticationPrincipal Jwt jwt,
                                        Pageable pageable) {
         PaymentFilter filter = new PaymentFilter(orderId, status, userId);
@@ -61,6 +97,13 @@ public class PaymentController {
     }
 
     @GetMapping("/users/{userId}/summary")
+    @Operation(summary = "Get a user's success-payment summary", description = "Sum of SUCCESS payments for {userId} within [from, to]. USER may only request their own; ADMIN may request any.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Summary computed"),
+            @ApiResponse(responseCode = "400", description = "Missing or invalid from/to parameters"),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
+            @ApiResponse(responseCode = "403", description = "USER requesting another user's summary")
+    })
     public PaymentSummaryResponse userSummary(@PathVariable String userId,
                                                @RequestParam Instant from,
                                                @RequestParam Instant to,
@@ -70,6 +113,13 @@ public class PaymentController {
 
     @GetMapping("/summary")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Get the platform-wide success-payment summary", description = "Sum of SUCCESS payments across all users within [from, to]. ADMIN only.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Summary computed"),
+            @ApiResponse(responseCode = "400", description = "Missing or invalid from/to parameters"),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
+            @ApiResponse(responseCode = "403", description = "Caller is not an ADMIN")
+    })
     public PaymentSummaryResponse platformSummary(@RequestParam Instant from,
                                                    @RequestParam Instant to,
                                                    @AuthenticationPrincipal Jwt jwt) {
