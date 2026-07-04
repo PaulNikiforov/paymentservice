@@ -2,6 +2,9 @@ package com.innowise.paymentservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.innowise.paymentservice.DisableMongock;
+import com.innowise.paymentservice.StubJwksUri;
+import com.innowise.paymentservice.config.JwtAuthenticationEntryPoint;
+import com.innowise.paymentservice.config.SecurityConfig;
 import com.innowise.paymentservice.document.PaymentStatus;
 import com.innowise.paymentservice.service.PaymentService;
 import com.innowise.paymentservice.service.dto.PaymentFilter;
@@ -11,10 +14,12 @@ import com.innowise.paymentservice.service.dto.PaymentSummaryResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -27,13 +32,16 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(PaymentController.class)
+@Import({SecurityConfig.class, JwtAuthenticationEntryPoint.class})
 @DisableMongock
+@StubJwksUri
 class PaymentControllerTest {
 
     @Autowired
@@ -60,7 +68,8 @@ class PaymentControllerTest {
         when(paymentService.create(any(PaymentRequest.class), eq("user-1"))).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/payments")
-                        .header("X-User-Id", "user-1")
+                        .with(jwt().jwt(j -> j.claim("sub", "user-1").claim("role", "USER"))
+                                .authorities(new SimpleGrantedAuthority("ROLE_USER")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isAccepted())
@@ -85,8 +94,7 @@ class PaymentControllerTest {
         when(paymentService.getById(eq("payment-1"), eq("user-1"), eq(false))).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/payments/payment-1")
-                        .header("X-User-Id", "user-1")
-                        .header("X-User-Role", "USER"))
+                        .with(jwt().jwt(j -> j.claim("sub", "user-1").claim("role", "USER"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("payment-1"))
                 .andExpect(jsonPath("$.orderId").value("order-1"))
@@ -116,8 +124,8 @@ class PaymentControllerTest {
         mockMvc.perform(get("/api/v1/payments")
                         .param("orderId", "order-1")
                         .param("status", "SUCCESS")
-                        .header("X-User-Id", "user-1")
-                        .header("X-User-Role", "USER"))
+                        .with(jwt().jwt(j -> j.claim("sub", "user-1").claim("role", "USER"))
+                                .authorities(new SimpleGrantedAuthority("ROLE_USER"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value("payment-1"))
                 .andExpect(jsonPath("$.totalElements").value(1));
@@ -143,8 +151,7 @@ class PaymentControllerTest {
         mockMvc.perform(get("/api/v1/payments/users/user-1/summary")
                         .param("from", "2024-01-01T00:00:00Z")
                         .param("to", "2024-12-31T23:59:59Z")
-                        .header("X-User-Id", "user-1")
-                        .header("X-User-Role", "USER"))
+                        .with(jwt().jwt(j -> j.claim("sub", "user-1").claim("role", "USER"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value("user-1"))
                 .andExpect(jsonPath("$.totalAmount").value(150.00));
@@ -168,7 +175,8 @@ class PaymentControllerTest {
         mockMvc.perform(get("/api/v1/payments/summary")
                         .param("from", "2024-01-01T00:00:00Z")
                         .param("to", "2024-12-31T23:59:59Z")
-                        .header("X-User-Role", "ADMIN"))
+                        .with(jwt().jwt(j -> j.claim("role", "ADMIN"))
+                                .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalAmount").value(5000.00))
                 .andExpect(jsonPath("$.userId").doesNotExist());
@@ -179,7 +187,8 @@ class PaymentControllerTest {
         String requestBody = "{\"orderId\":\"\",\"paymentAmount\":10.00}";
 
         mockMvc.perform(post("/api/v1/payments")
-                        .header("X-User-Id", "user-1")
+                        .with(jwt().jwt(j -> j.claim("sub", "user-1").claim("role", "USER"))
+                                .authorities(new SimpleGrantedAuthority("ROLE_USER")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest());

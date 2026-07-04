@@ -3,6 +3,7 @@ package com.innowise.paymentservice.migration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.innowise.paymentservice.StubExternalPaymentApi;
+import com.innowise.paymentservice.StubJwksUri;
 import com.innowise.paymentservice.TestcontainersConfiguration;
 import java.util.List;
 import org.bson.Document;
@@ -17,6 +18,7 @@ import org.springframework.data.mongodb.core.index.IndexInfo;
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
 @StubExternalPaymentApi
+@StubJwksUri
 class PaymentIndexMigrationTest {
 
 	@Autowired

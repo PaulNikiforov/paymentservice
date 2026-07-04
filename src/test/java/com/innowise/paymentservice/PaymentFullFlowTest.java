@@ -1,5 +1,6 @@
 package com.innowise.paymentservice;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -14,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -23,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @StubExternalPaymentApi
+@StubJwksUri
 class PaymentFullFlowTest {
 
     @Autowired
@@ -37,7 +40,8 @@ class PaymentFullFlowTest {
 
         MvcResult createResult = mockMvc.perform(post("/api/v1/payments")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-User-Id", "user-flow-1")
+                        .with(jwt().jwt(j -> j.claim("sub", "user-flow-1").claim("role", "USER"))
+                                .authorities(new SimpleGrantedAuthority("ROLE_USER")))
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isAccepted())
                 .andReturn();
@@ -46,8 +50,7 @@ class PaymentFullFlowTest {
                 createResult.getResponse().getContentAsString(), PaymentResponse.class);
 
         MvcResult getResult = mockMvc.perform(get("/api/v1/payments/{id}", created.id())
-                        .header("X-User-Id", "user-flow-1")
-                        .header("X-User-Role", "USER"))
+                        .with(jwt().jwt(j -> j.claim("sub", "user-flow-1").claim("role", "USER"))))
                 .andExpect(status().isOk())
                 .andReturn();
 

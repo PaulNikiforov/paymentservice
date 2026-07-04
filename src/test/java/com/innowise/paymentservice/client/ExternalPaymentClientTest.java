@@ -2,6 +2,7 @@ package com.innowise.paymentservice.client;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.innowise.paymentservice.StubJwksUri;
 import com.innowise.paymentservice.TestcontainersConfiguration;
 import com.innowise.paymentservice.document.PaymentDocument;
 import com.innowise.paymentservice.document.PaymentStatus;
@@ -28,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
+@StubJwksUri
 class ExternalPaymentClientTest {
 
     static WireMockServer wireMock = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort());

@@ -7,6 +7,11 @@ spring:
       uri: ${MONGO_URI:mongodb://localhost:27017/paymentdb}
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_JWKS_URI:http://localhost:8081/oauth2/jwks}
 
 payment:
   external-api:
