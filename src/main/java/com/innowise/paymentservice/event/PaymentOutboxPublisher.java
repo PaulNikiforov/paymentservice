@@ -4,6 +4,7 @@ import com.innowise.paymentservice.document.PaymentDocument;
 import com.innowise.paymentservice.document.PaymentStatus;
 import com.innowise.paymentservice.repository.PaymentRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -32,13 +33,15 @@ import java.util.concurrent.TimeoutException;
 public class PaymentOutboxPublisher {
 
     private static final String TOPIC = "payment-events";
-    private static final int BATCH_SIZE = 50;
     private static final long SEND_TIMEOUT_MS = 5000;
     private static final List<PaymentStatus> RESOLVED_STATUSES =
             List.of(PaymentStatus.SUCCESS, PaymentStatus.FAILED);
 
     private final PaymentRepository paymentRepository;
     private final KafkaTemplate<String, PaymentCompletedEvent> kafkaTemplate;
+
+    @Value("${payment.outbox.batch-size:50}")
+    private int batchSize = 50;
 
     public PaymentOutboxPublisher(PaymentRepository paymentRepository,
                                   KafkaTemplate<String, PaymentCompletedEvent> kafkaTemplate) {
@@ -49,7 +52,7 @@ public class PaymentOutboxPublisher {
     @Scheduled(fixedDelayString = "${payment.outbox.poll-interval-ms:2000}")
     public void publishPending() {
         Page<PaymentDocument> pending = paymentRepository.findByStatusInAndEventPublishedFalse(
-                RESOLVED_STATUSES, PageRequest.of(0, BATCH_SIZE));
+                RESOLVED_STATUSES, PageRequest.of(0, batchSize));
         for (PaymentDocument payment : pending) {
             publishOne(payment);
         }

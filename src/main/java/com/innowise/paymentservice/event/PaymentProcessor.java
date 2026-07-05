@@ -5,6 +5,7 @@ import com.innowise.paymentservice.document.PaymentDocument;
 import com.innowise.paymentservice.document.PaymentStatus;
 import com.innowise.paymentservice.exception.PaymentGatewayException;
 import com.innowise.paymentservice.repository.PaymentRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -25,30 +26,27 @@ import java.time.Instant;
  *
  * <p>Publishing the resulting terminal status to Kafka is a separate concern, handled by
  * {@link PaymentOutboxPublisher} — this class never touches {@code eventPublished}.
+ *
+ * <p>Runs as a single scheduled task on a single-instance deployment, so a plain
+ * {@code findByStatus(PENDING, ...)} poll is sufficient: each tick issues exactly one query for a
+ * fixed page and there is no concurrent tick that could re-fetch an in-flight document. Distributed
+ * locking is a distinct, deliberately deferred concern (YAGNI) if the service is ever scaled out.
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class PaymentProcessor {
-
-    private static final int BATCH_SIZE = 50;
 
     private final PaymentRepository paymentRepository;
     private final ExternalPaymentClient externalPaymentClient;
-    private final long minAgeMs;
 
-    public PaymentProcessor(PaymentRepository paymentRepository,
-                             ExternalPaymentClient externalPaymentClient,
-                             @Value("${payment.processor.min-age-ms:250}") long minAgeMs) {
-        this.paymentRepository = paymentRepository;
-        this.externalPaymentClient = externalPaymentClient;
-        this.minAgeMs = minAgeMs;
-    }
+    @Value("${payment.processor.batch-size:50}")
+    private int batchSize = 50;
 
     @Scheduled(fixedDelayString = "${payment.processor.poll-interval-ms:2000}")
     public void processPending() {
-        Instant updatedBefore = Instant.now().minusMillis(minAgeMs);
-        Page<PaymentDocument> pending = paymentRepository.findByStatusAndUpdatedAtBefore(
-                PaymentStatus.PENDING, updatedBefore, PageRequest.of(0, BATCH_SIZE));
+        Page<PaymentDocument> pending = paymentRepository.findByStatus(
+                PaymentStatus.PENDING, PageRequest.of(0, batchSize));
         for (PaymentDocument payment : pending) {
             processOne(payment);
         }

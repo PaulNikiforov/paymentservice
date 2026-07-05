@@ -58,7 +58,6 @@ class PaymentFullFlowTest {
     static void properties(DynamicPropertyRegistry registry) {
         registry.add("payment.external-api.url", () -> "http://localhost:" + wireMock.port());
         registry.add("payment.processor.poll-interval-ms", () -> "200");
-        registry.add("payment.processor.min-age-ms", () -> "0");
         registry.add("payment.outbox.poll-interval-ms", () -> "200");
     }
 

@@ -33,7 +33,6 @@ import static org.mockito.Mockito.when;
 class PaymentProcessorTest {
 
     private static final Instant NOW = Instant.parse("2024-01-01T00:00:00Z");
-    private static final long MIN_AGE_MS = 250;
 
     @Mock
     private PaymentRepository paymentRepository;
@@ -45,7 +44,7 @@ class PaymentProcessorTest {
 
     @BeforeEach
     void setUp() {
-        processor = new PaymentProcessor(paymentRepository, externalPaymentClient, MIN_AGE_MS);
+        processor = new PaymentProcessor(paymentRepository, externalPaymentClient);
     }
 
     @Test
@@ -92,26 +91,23 @@ class PaymentProcessorTest {
     }
 
     @Test
-    @DisplayName("polls only PENDING payments older than the configured minimum age, in batches of 50")
-    void processPending_pollsPendingOlderThanMinAgeInBatchesOfFifty() {
-        when(paymentRepository.findByStatusAndUpdatedAtBefore(any(), any(), any()))
+    @DisplayName("polls only PENDING payments, in batches of 50")
+    void processPending_pollsPendingInBatchesOfFifty() {
+        when(paymentRepository.findByStatus(any(), any()))
                 .thenReturn(emptyPage());
 
         processor.processPending();
 
         ArgumentCaptor<PaymentStatus> status = ArgumentCaptor.forClass(PaymentStatus.class);
-        ArgumentCaptor<Instant> updatedBefore = ArgumentCaptor.forClass(Instant.class);
         ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
-        verify(paymentRepository).findByStatusAndUpdatedAtBefore(
-                status.capture(), updatedBefore.capture(), pageable.capture());
+        verify(paymentRepository).findByStatus(status.capture(), pageable.capture());
         assertThat(status.getValue()).isEqualTo(PaymentStatus.PENDING);
-        assertThat(updatedBefore.getValue()).isBefore(Instant.now().minusMillis(MIN_AGE_MS).plusSeconds(1));
         assertThat(pageable.getValue().getPageSize()).isEqualTo(50);
         assertThat(pageable.getValue().getPageNumber()).isZero();
     }
 
     private void stubPage(PaymentDocument payment) {
-        when(paymentRepository.findByStatusAndUpdatedAtBefore(any(), any(), any()))
+        when(paymentRepository.findByStatus(any(), any()))
                 .thenReturn(new PageImpl<>(List.of(payment), PageRequest.of(0, 50), 1));
     }
 

@@ -70,22 +70,6 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void getById_returnsServiceUnavailableWithErrorResponseWhenGatewayFails() throws Exception {
-        when(paymentService.getById(eq("payment-1"), eq("user-1"), eq(false)))
-                .thenThrow(new PaymentGatewayException("External payment gateway unavailable",
-                        new RuntimeException("timeout")));
-
-        mockMvc.perform(get("/api/v1/payments/payment-1")
-                        .with(jwt().jwt(j -> j.claim("sub", "user-1").claim("role", "USER"))))
-                .andExpect(status().isServiceUnavailable())
-                .andExpect(jsonPath("$.status").value(503))
-                .andExpect(jsonPath("$.error").value("Service Unavailable"))
-                .andExpect(jsonPath("$.message").value("External payment gateway unavailable"))
-                .andExpect(jsonPath("$.path").value("/api/v1/payments/payment-1"))
-                .andExpect(jsonPath("$.timestamp").exists());
-    }
-
-    @Test
     void createPayment_returnsBadRequestWithErrorResponseWhenOrderIdBlank() throws Exception {
         String requestBody = "{\"orderId\":\"\",\"paymentAmount\":10.00}";
 

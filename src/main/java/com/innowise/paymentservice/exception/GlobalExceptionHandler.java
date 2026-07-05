@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 /**
  * Maps every exception the payment API can throw to the platform's unified
  * {@link ErrorResponse} JSON shape: custom domain exceptions to their documented status
- * (404/403/503), request-binding/parsing failures and bean validation to 400, and anything
+ * (404/403), request-binding/parsing failures and bean validation to 400, and anything
  * else to a 500 fallback that never leaks the underlying exception message.
  */
 @Slf4j
@@ -44,11 +44,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
         return buildResponse(HttpStatus.FORBIDDEN, "Access denied", request);
-    }
-
-    @ExceptionHandler(PaymentGatewayException.class)
-    public ResponseEntity<ErrorResponse> handlePaymentGateway(PaymentGatewayException ex, HttpServletRequest request) {
-        return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

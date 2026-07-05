@@ -2,6 +2,11 @@ spring:
   application:
     name: paymentservice
 
+  task:
+    scheduling:
+      pool:
+        size: 2
+
   data:
     mongodb:
       uri: ${MONGO_URI}
@@ -36,9 +41,10 @@ resilience4j:
 payment:
   outbox:
     poll-interval-ms: ${PAYMENT_OUTBOX_POLL_INTERVAL_MS:2000}
+    batch-size: ${PAYMENT_OUTBOX_BATCH_SIZE:50}
   processor:
     poll-interval-ms: ${PAYMENT_PROCESSOR_POLL_INTERVAL_MS:2000}
-    min-age-ms: ${PAYMENT_PROCESSOR_MIN_AGE_MS:250}
+    batch-size: ${PAYMENT_PROCESSOR_BATCH_SIZE:50}
   external-api:
     url: ${EXTERNAL_PAYMENT_API_URL}
     connect-timeout-ms: ${PAYMENT_EXTERNAL_API_CONNECT_TIMEOUT_MS:2000}
