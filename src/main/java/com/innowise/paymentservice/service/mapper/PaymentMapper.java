@@ -13,7 +13,7 @@ public interface PaymentMapper {
     @Mapping(target = "status", constant = "PENDING")
     @Mapping(target = "eventPublished", constant = "false")
     @Mapping(target = "createdAt", expression = "java(java.time.Instant.now())")
-    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "updatedAt", expression = "java(java.time.Instant.now())")
     PaymentDocument toPendingDocument(PaymentRequest request, String userId);
 
     PaymentResponse toResponse(PaymentDocument document);

@@ -36,6 +36,9 @@ resilience4j:
 payment:
   outbox:
     poll-interval-ms: ${PAYMENT_OUTBOX_POLL_INTERVAL_MS:2000}
+  processor:
+    poll-interval-ms: ${PAYMENT_PROCESSOR_POLL_INTERVAL_MS:2000}
+    min-age-ms: ${PAYMENT_PROCESSOR_MIN_AGE_MS:250}
   external-api:
     url: ${EXTERNAL_PAYMENT_API_URL}
     connect-timeout-ms: ${PAYMENT_EXTERNAL_API_CONNECT_TIMEOUT_MS:2000}

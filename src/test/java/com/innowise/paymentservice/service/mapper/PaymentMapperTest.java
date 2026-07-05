@@ -29,7 +29,7 @@ class PaymentMapperTest {
         assertThat(document.getStatus()).isEqualTo(PaymentStatus.PENDING);
         assertThat(document.isEventPublished()).isFalse();
         assertThat(document.getCreatedAt()).isNotNull();
-        assertThat(document.getUpdatedAt()).isNull();
+        assertThat(document.getUpdatedAt()).isNotNull();
     }
 
     @Test
