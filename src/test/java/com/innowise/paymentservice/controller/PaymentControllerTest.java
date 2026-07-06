@@ -91,7 +91,7 @@ class PaymentControllerTest {
                 Instant.parse("2026-07-03T00:00:00Z")
         );
 
-        when(paymentService.getById(eq("payment-1"), eq("user-1"), eq(false))).thenReturn(response);
+        when(paymentService.getById("payment-1", "user-1", false)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/payments/payment-1")
                         .with(jwt().jwt(j -> j.claim("sub", "user-1").claim("role", "USER"))))
@@ -141,11 +141,11 @@ class PaymentControllerTest {
         );
 
         when(paymentService.userSummary(
-                eq("user-1"),
-                eq(Instant.parse("2024-01-01T00:00:00Z")),
-                eq(Instant.parse("2024-12-31T23:59:59Z")),
-                eq("user-1"),
-                eq(false)))
+                "user-1",
+                Instant.parse("2024-01-01T00:00:00Z"),
+                Instant.parse("2024-12-31T23:59:59Z"),
+                "user-1",
+                false))
                 .thenReturn(response);
 
         mockMvc.perform(get("/api/v1/payments/users/user-1/summary")
@@ -167,9 +167,9 @@ class PaymentControllerTest {
         );
 
         when(paymentService.platformSummary(
-                eq(Instant.parse("2024-01-01T00:00:00Z")),
-                eq(Instant.parse("2024-12-31T23:59:59Z")),
-                eq(true)))
+                Instant.parse("2024-01-01T00:00:00Z"),
+                Instant.parse("2024-12-31T23:59:59Z"),
+                true))
                 .thenReturn(response);
 
         mockMvc.perform(get("/api/v1/payments/summary")

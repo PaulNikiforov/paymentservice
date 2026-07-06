@@ -37,7 +37,7 @@ class ExternalPaymentClientTest {
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
         registry.add("payment.external-api.url", () -> "http://localhost:" + wireMock.port());
-        registry.add("payment.external-api.read-timeout-ms", () -> "500");
+        registry.add("payment.external-api.read-timeout-ms", () -> "2000");
     }
 
     @BeforeAll
@@ -99,7 +99,7 @@ class ExternalPaymentClientTest {
     @Test
     void charge_whenExternalApiIsSlow_throwsPaymentGatewayException() {
         wireMock.stubFor(get(urlPathEqualTo("/"))
-                .willReturn(okForContentType("text/plain", "42\n").withFixedDelay(1500)));
+                .willReturn(okForContentType("text/plain", "42\n").withFixedDelay(4000)));
 
         PaymentDocument payment = new PaymentDocument(null, "order-1", "user-1",
                 PaymentStatus.PENDING, new BigDecimal("10.00"), false, Instant.now(), Instant.now());

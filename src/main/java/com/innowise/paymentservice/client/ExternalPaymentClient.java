@@ -29,7 +29,7 @@ public class ExternalPaymentClient {
         return value % 2 == 0 ? PaymentStatus.SUCCESS : PaymentStatus.FAILED;
     }
 
-    private PaymentStatus chargeFallback(PaymentDocument payment, Throwable t) {
+    private PaymentStatus chargeFallback(Throwable t) {
         throw new PaymentGatewayException("External payment API unavailable", t);
     }
 }

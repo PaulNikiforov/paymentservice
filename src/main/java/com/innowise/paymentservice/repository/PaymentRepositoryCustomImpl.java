@@ -20,6 +20,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PaymentRepositoryCustomImpl implements PaymentRepositoryCustom {
 
+    private static final String STATUS_FIELD = "status";
+
     private final MongoTemplate mongoTemplate;
 
     @Override
@@ -33,7 +35,7 @@ public class PaymentRepositoryCustomImpl implements PaymentRepositoryCustom {
             query.addCriteria(Criteria.where("orderId").is(orderId));
         }
         if (status != null) {
-            query.addCriteria(Criteria.where("status").is(status));
+            query.addCriteria(Criteria.where(STATUS_FIELD).is(status));
         }
 
         long total = mongoTemplate.count(query, PaymentDocument.class);
@@ -45,13 +47,13 @@ public class PaymentRepositoryCustomImpl implements PaymentRepositoryCustom {
     @Override
     public BigDecimal sumSuccessfulPaymentsForUser(String userId, Instant from, Instant to) {
         return sumPaymentAmount(Criteria.where("userId").is(userId)
-                .and("status").is(PaymentStatus.SUCCESS)
+                .and(STATUS_FIELD).is(PaymentStatus.SUCCESS)
                 .and("createdAt").gte(from).lte(to));
     }
 
     @Override
     public BigDecimal sumSuccessfulPaymentsForAllUsers(Instant from, Instant to) {
-        return sumPaymentAmount(Criteria.where("status").is(PaymentStatus.SUCCESS)
+        return sumPaymentAmount(Criteria.where(STATUS_FIELD).is(PaymentStatus.SUCCESS)
                 .and("createdAt").gte(from).lte(to));
     }
 

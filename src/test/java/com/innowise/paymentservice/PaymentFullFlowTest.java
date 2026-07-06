@@ -23,6 +23,7 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -140,26 +141,20 @@ class PaymentFullFlowTest {
 
         try (Consumer<String, PaymentCompletedEvent> consumer = createEventConsumer()) {
             consumer.subscribe(List.of(TOPIC));
-            ConsumerRecord<String, PaymentCompletedEvent> record =
-                    KafkaTestUtils.getSingleRecord(consumer, TOPIC, Duration.ofSeconds(10));
+            ConsumerRecord<String, PaymentCompletedEvent> consumerRecord =
+                    KafkaTestUtils.getSingleRecord(consumer, TOPIC, Duration.ofSeconds(20));
 
-            assertThat(record.key()).isEqualTo("order-flow-2");
-            assertThat(record.value()).isEqualTo(new PaymentCompletedEvent("order-flow-2", PaymentStatus.SUCCESS));
+            assertThat(consumerRecord.key()).isEqualTo("order-flow-2");
+            assertThat(consumerRecord.value()).isEqualTo(new PaymentCompletedEvent("order-flow-2", PaymentStatus.SUCCESS));
         }
     }
 
-    private void awaitStatus(String paymentId, PaymentStatus expected) throws InterruptedException {
-        long deadline = System.currentTimeMillis() + 10_000;
-        while (System.currentTimeMillis() < deadline) {
-            var doc = paymentRepository.findById(paymentId).orElseThrow();
-            if (doc.getStatus() == expected) {
-                return;
-            }
-            Thread.sleep(100);
-        }
-        throw new AssertionError("Payment " + paymentId + " did not reach status " + expected
-                + " within timeout; current status: "
-                + paymentRepository.findById(paymentId).orElseThrow().getStatus());
+    private void awaitStatus(String paymentId, PaymentStatus expected) {
+        Awaitility.await()
+                .atMost(Duration.ofSeconds(20))
+                .pollInterval(Duration.ofMillis(100))
+                .untilAsserted(() -> assertThat(paymentRepository.findById(paymentId).orElseThrow().getStatus())
+                        .isEqualTo(expected));
     }
 
     private Consumer<String, PaymentCompletedEvent> createEventConsumer() {

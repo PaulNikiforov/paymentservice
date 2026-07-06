@@ -19,7 +19,6 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -68,7 +67,7 @@ class PaymentControllerSecurityTest {
                 Instant.parse("2026-07-03T00:00:00Z")
         );
 
-        when(paymentService.getById(eq("payment-1"), eq("user-1"), eq(false))).thenReturn(response);
+        when(paymentService.getById("payment-1", "user-1", false)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/payments/payment-1")
                         .with(userJwt("user-1")))

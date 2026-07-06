@@ -17,7 +17,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,7 +40,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void getById_returnsNotFoundWithErrorResponseWhenPaymentMissing() throws Exception {
-        when(paymentService.getById(eq("payment-404"), eq("user-1"), eq(false)))
+        when(paymentService.getById("payment-404", "user-1", false))
                 .thenThrow(new PaymentNotFoundException("Payment not found: payment-404"));
 
         mockMvc.perform(get("/api/v1/payments/payment-404")
@@ -56,7 +55,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void getById_returnsForbiddenWithErrorResponseWhenAccessDenied() throws Exception {
-        when(paymentService.getById(eq("payment-1"), eq("user-2"), eq(false)))
+        when(paymentService.getById("payment-1", "user-2", false))
                 .thenThrow(new PaymentAccessDeniedException("Access denied to payment payment-1"));
 
         mockMvc.perform(get("/api/v1/payments/payment-1")
@@ -90,7 +89,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void getById_returnsInternalServerErrorWithErrorResponseForUnexpectedException() throws Exception {
-        when(paymentService.getById(eq("payment-1"), eq("user-1"), eq(false)))
+        when(paymentService.getById("payment-1", "user-1", false))
                 .thenThrow(new IllegalStateException("boom - some unexpected internal detail"));
 
         mockMvc.perform(get("/api/v1/payments/payment-1")
