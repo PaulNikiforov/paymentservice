@@ -35,7 +35,9 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentResponse getById(String id, String userId, boolean admin) {
         PaymentDocument doc = paymentRepository.findById(id)
                 .orElseThrow(() -> new PaymentNotFoundException("Payment not found: " + id));
-        requireAdminOr(admin, doc.getUserId().equals(userId), "Access denied: payment " + doc.getId());
+        if (isAccessDenied(admin, doc.getUserId().equals(userId))) {
+            throw new PaymentAccessDeniedException("Access denied: payment " + doc.getId());
+        }
         return paymentMapper.toResponse(doc);
     }
 
@@ -50,23 +52,23 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public PaymentSummaryResponse userSummary(String targetUserId, Instant from, Instant to,
                                               String callerUserId, boolean admin) {
-        requireAdminOr(admin, targetUserId.equals(callerUserId),
-                "Access denied: summary for user " + targetUserId);
+        if (isAccessDenied(admin, targetUserId.equals(callerUserId))) {
+            throw new PaymentAccessDeniedException("Access denied: summary for user " + targetUserId);
+        }
         var total = paymentRepository.sumSuccessfulPaymentsForUser(targetUserId, from, to);
         return new PaymentSummaryResponse(targetUserId, total, from, to);
     }
 
     @Override
     public PaymentSummaryResponse platformSummary(Instant from, Instant to, boolean admin) {
-        requireAdminOr(admin, false,
-                "Access denied: platform summary requires admin role");
+        if (!admin) {
+            throw new PaymentAccessDeniedException("Access denied: platform summary requires admin role");
+        }
         var total = paymentRepository.sumSuccessfulPaymentsForAllUsers(from, to);
         return new PaymentSummaryResponse(null, total, from, to);
     }
 
-    private void requireAdminOr(boolean admin, boolean allowed, String message) {
-        if (!admin && !allowed) {
-            throw new PaymentAccessDeniedException(message);
-        }
+    private boolean isAccessDenied(boolean admin, boolean allowed) {
+        return !admin && !allowed;
     }
 }

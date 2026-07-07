@@ -12,7 +12,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+
 import java.time.Instant;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -59,7 +61,7 @@ public class PaymentController {
     @ApiResponse(responseCode = "400", description = "Validation error (missing orderId, non-positive paymentAmount)")
     @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
     public PaymentResponse create(@Valid @RequestBody PaymentRequest request,
-                                   @AuthenticationPrincipal Jwt jwt) {
+                                  @AuthenticationPrincipal Jwt jwt) {
         return paymentService.create(request, callerUserId(jwt));
     }
 
@@ -70,7 +72,7 @@ public class PaymentController {
     @ApiResponse(responseCode = "403", description = "USER requesting another user's payment")
     @ApiResponse(responseCode = "404", description = "Payment id does not exist")
     public PaymentResponse getById(@PathVariable String id,
-                                    @AuthenticationPrincipal Jwt jwt) {
+                                   @AuthenticationPrincipal Jwt jwt) {
         return paymentService.getById(id, callerUserId(jwt), isAdmin(jwt));
     }
 
@@ -80,11 +82,14 @@ public class PaymentController {
     @ApiResponse(responseCode = "200", description = "Paged list of payments")
     @ApiResponse(responseCode = "400", description = "Invalid status filter value")
     @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
-    public Page<PaymentResponse> list(@RequestParam(required = false) @Parameter(description = "Filter by order id") String orderId,
-                                       @RequestParam(required = false) @Parameter(description = "Filter by payment status") PaymentStatus status,
-                                       @RequestParam(required = false) @Parameter(description = "ADMIN-only: filter by owner user id") String userId,
-                                       @AuthenticationPrincipal Jwt jwt,
-                                       Pageable pageable) {
+    public Page<PaymentResponse> list(@RequestParam(required = false)
+                                      @Parameter(description = "Filter by order id") String orderId,
+                                      @RequestParam(required = false)
+                                      @Parameter(description = "Filter by payment status") PaymentStatus status,
+                                      @RequestParam(required = false)
+                                      @Parameter(description = "ADMIN-only: filter by owner user id") String userId,
+                                      @AuthenticationPrincipal Jwt jwt,
+                                      Pageable pageable) {
         PaymentFilter filter = new PaymentFilter(orderId, status, userId);
         return paymentService.list(filter, callerUserId(jwt), isAdmin(jwt), pageable);
     }
@@ -96,9 +101,9 @@ public class PaymentController {
     @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
     @ApiResponse(responseCode = "403", description = "USER requesting another user's summary")
     public PaymentSummaryResponse userSummary(@PathVariable String userId,
-                                               @RequestParam Instant from,
-                                               @RequestParam Instant to,
-                                               @AuthenticationPrincipal Jwt jwt) {
+                                              @RequestParam Instant from,
+                                              @RequestParam Instant to,
+                                              @AuthenticationPrincipal Jwt jwt) {
         return paymentService.userSummary(userId, from, to, callerUserId(jwt), isAdmin(jwt));
     }
 
@@ -110,8 +115,8 @@ public class PaymentController {
     @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
     @ApiResponse(responseCode = "403", description = "Caller is not an ADMIN")
     public PaymentSummaryResponse platformSummary(@RequestParam Instant from,
-                                                   @RequestParam Instant to,
-                                                   @AuthenticationPrincipal Jwt jwt) {
+                                                  @RequestParam Instant to,
+                                                  @AuthenticationPrincipal Jwt jwt) {
         return paymentService.platformSummary(from, to, isAdmin(jwt));
     }
 
