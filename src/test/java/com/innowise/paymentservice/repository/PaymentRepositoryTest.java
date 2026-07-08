@@ -39,8 +39,8 @@ class PaymentRepositoryTest {
     }
 
     private static PaymentDocument payment(String orderId, String userId, PaymentStatus status,
-                                            boolean eventPublished, BigDecimal amount, Instant createdAt) {
-        return new PaymentDocument(null, orderId, userId, status, amount, eventPublished, createdAt, createdAt);
+                                            boolean eventPublished, BigDecimal amount, Instant timestamp) {
+        return new PaymentDocument(null, orderId, userId, status, amount, eventPublished, timestamp);
     }
 
     private static PaymentDocument payment(String orderId, String userId, PaymentStatus status,
@@ -49,8 +49,8 @@ class PaymentRepositoryTest {
     }
 
     private static PaymentDocument paymentAt(String orderId, String userId, PaymentStatus status,
-                                              BigDecimal amount, Instant createdAt) {
-        return payment(orderId, userId, status, false, amount, createdAt);
+                                              BigDecimal amount, Instant timestamp) {
+        return payment(orderId, userId, status, false, amount, timestamp);
     }
 
     @Test
@@ -63,8 +63,7 @@ class PaymentRepositoryTest {
         assertThat(created.getPaymentAmount()).isEqualByComparingTo("42.50");
         assertThat(created.getStatus()).isEqualTo(PaymentStatus.PENDING);
         assertThat(created.isEventPublished()).isFalse();
-        assertThat(created.getCreatedAt()).isNotNull();
-        assertThat(created.getUpdatedAt()).isNotNull();
+        assertThat(created.getTimestamp()).isNotNull();
     }
 
     @Test
@@ -88,7 +87,7 @@ class PaymentRepositoryTest {
                 .find(new Document("_id", new ObjectId(saved.getId())))
                 .first();
 
-        assertThat(raw.get("paymentAmount")).isInstanceOf(Decimal128.class);
+        assertThat(raw.get("payment_amount")).isInstanceOf(Decimal128.class);
     }
 
     @Test

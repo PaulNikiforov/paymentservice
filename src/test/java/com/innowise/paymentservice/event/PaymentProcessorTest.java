@@ -48,7 +48,7 @@ class PaymentProcessorTest {
     }
 
     @Test
-    @DisplayName("happy path: external API resolves SUCCESS -> status and updatedAt persisted")
+    @DisplayName("happy path: external API resolves SUCCESS -> status and timestamp persisted")
     void processPending_whenChargeSucceeds_savesResolvedStatus() {
         PaymentDocument payment = pending("order-1");
         stubPage(payment);
@@ -57,7 +57,7 @@ class PaymentProcessorTest {
         processor.processPending();
 
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.SUCCESS);
-        assertThat(payment.getUpdatedAt()).isAfter(NOW);
+        assertThat(payment.getTimestamp()).isAfter(NOW);
         InOrder order = inOrder(externalPaymentClient, paymentRepository);
         order.verify(externalPaymentClient).charge(payment);
         order.verify(paymentRepository).save(payment);
@@ -117,6 +117,6 @@ class PaymentProcessorTest {
 
     private PaymentDocument pending(String orderId) {
         return new PaymentDocument("p1", orderId, "u1", PaymentStatus.PENDING,
-                new BigDecimal("10.00"), false, NOW, NOW);
+                new BigDecimal("10.00"), false, NOW);
     }
 }

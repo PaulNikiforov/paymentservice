@@ -112,7 +112,7 @@ class PaymentOutboxPublisherTest {
 
     private PaymentDocument pending(String orderId, PaymentStatus status) {
         return new PaymentDocument("p1", orderId, "u1", status,
-                new BigDecimal("10.00"), false, NOW, NOW);
+                new BigDecimal("10.00"), false, NOW);
     }
 
     private static SendResult<String, PaymentCompletedEvent> sendResult() {

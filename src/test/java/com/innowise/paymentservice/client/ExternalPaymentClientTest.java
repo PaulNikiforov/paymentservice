@@ -64,7 +64,7 @@ class ExternalPaymentClientTest {
                 .willReturn(okForContentType("text/plain", "42\n")));
 
         PaymentDocument payment = new PaymentDocument(null, "order-1", "user-1",
-                PaymentStatus.PENDING, new BigDecimal("10.00"), false, Instant.now(), Instant.now());
+                PaymentStatus.PENDING, new BigDecimal("10.00"), false, Instant.now());
 
         PaymentStatus result = externalPaymentClient.charge(payment);
 
@@ -77,7 +77,7 @@ class ExternalPaymentClientTest {
                 .willReturn(okForContentType("text/plain", "43\n")));
 
         PaymentDocument payment = new PaymentDocument(null, "order-1", "user-1",
-                PaymentStatus.PENDING, new BigDecimal("10.00"), false, Instant.now(), Instant.now());
+                PaymentStatus.PENDING, new BigDecimal("10.00"), false, Instant.now());
 
         PaymentStatus result = externalPaymentClient.charge(payment);
 
@@ -90,7 +90,7 @@ class ExternalPaymentClientTest {
                 .willReturn(aResponse().withStatus(500)));
 
         PaymentDocument payment = new PaymentDocument(null, "order-1", "user-1",
-                PaymentStatus.PENDING, new BigDecimal("10.00"), false, Instant.now(), Instant.now());
+                PaymentStatus.PENDING, new BigDecimal("10.00"), false, Instant.now());
 
         assertThatThrownBy(() -> externalPaymentClient.charge(payment))
                 .isInstanceOf(PaymentGatewayException.class);
@@ -102,7 +102,7 @@ class ExternalPaymentClientTest {
                 .willReturn(okForContentType("text/plain", "42\n").withFixedDelay(4000)));
 
         PaymentDocument payment = new PaymentDocument(null, "order-1", "user-1",
-                PaymentStatus.PENDING, new BigDecimal("10.00"), false, Instant.now(), Instant.now());
+                PaymentStatus.PENDING, new BigDecimal("10.00"), false, Instant.now());
 
         assertThatThrownBy(() -> externalPaymentClient.charge(payment))
                 .isInstanceOf(PaymentGatewayException.class);
@@ -114,7 +114,7 @@ class ExternalPaymentClientTest {
                 .willReturn(okForContentType("text/plain", "   ")));
 
         PaymentDocument payment = new PaymentDocument(null, "order-1", "user-1",
-                PaymentStatus.PENDING, new BigDecimal("10.00"), false, Instant.now(), Instant.now());
+                PaymentStatus.PENDING, new BigDecimal("10.00"), false, Instant.now());
 
         assertThatThrownBy(() -> externalPaymentClient.charge(payment))
                 .isInstanceOf(PaymentGatewayException.class);
@@ -126,7 +126,7 @@ class ExternalPaymentClientTest {
                 .willReturn(aResponse().withStatus(200)));
 
         PaymentDocument payment = new PaymentDocument(null, "order-1", "user-1",
-                PaymentStatus.PENDING, new BigDecimal("10.00"), false, Instant.now(), Instant.now());
+                PaymentStatus.PENDING, new BigDecimal("10.00"), false, Instant.now());
 
         assertThatThrownBy(() -> externalPaymentClient.charge(payment))
                 .isInstanceOf(PaymentGatewayException.class);

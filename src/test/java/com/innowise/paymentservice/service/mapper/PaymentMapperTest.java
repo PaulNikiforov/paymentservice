@@ -17,9 +17,9 @@ class PaymentMapperTest {
 
     @Test
     void toResponse_mapsAllFields() {
-        Instant createdAt = Instant.now();
+        Instant timestamp = Instant.now();
         PaymentDocument document = new PaymentDocument("id-1", "order-1", "user-1", PaymentStatus.SUCCESS,
-                new BigDecimal("99.99"), true, createdAt, createdAt);
+                new BigDecimal("99.99"), true, timestamp);
 
         PaymentResponse response = mapper.toResponse(document);
 
@@ -28,7 +28,7 @@ class PaymentMapperTest {
         assertThat(response.userId()).isEqualTo("user-1");
         assertThat(response.status()).isEqualTo(PaymentStatus.SUCCESS);
         assertThat(response.paymentAmount()).isEqualByComparingTo(new BigDecimal("99.99"));
-        assertThat(response.createdAt()).isEqualTo(createdAt);
+        assertThat(response.timestamp()).isEqualTo(timestamp);
     }
 
     @Test

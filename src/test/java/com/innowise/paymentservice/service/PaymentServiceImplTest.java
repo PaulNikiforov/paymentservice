@@ -251,7 +251,7 @@ class PaymentServiceImplTest {
 
     private static PaymentDocument doc(String id, String userId) {
         return new PaymentDocument(id, "order-1", userId, PaymentStatus.PENDING,
-                AMOUNT, false, FROM, FROM);
+                AMOUNT, false, FROM);
     }
 
     private static PaymentResponse response(String id, String userId) {

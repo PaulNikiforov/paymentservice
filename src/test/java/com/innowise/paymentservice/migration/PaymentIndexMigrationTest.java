@@ -33,7 +33,7 @@ class PaymentIndexMigrationTest {
 				.map(IndexField::getKey)
 				.toList();
 
-		assertThat(indexedFieldNames).contains("userId", "orderId", "status");
+		assertThat(indexedFieldNames).contains("user_id", "order_id", "status");
 	}
 
 	@Test
@@ -44,10 +44,10 @@ class PaymentIndexMigrationTest {
 				.map(indexInfo -> indexInfo.getIndexFields().stream()
 						.map(IndexField::getKey)
 						.toList())
-				.anyMatch(fieldNames -> fieldNames.contains("status") && fieldNames.contains("eventPublished"));
+				.anyMatch(fieldNames -> fieldNames.contains("status") && fieldNames.contains("event_published"));
 
 		assertThat(hasCompoundIndex)
-				.as("expected a compound index containing both 'status' and 'eventPublished' fields")
+				.as("expected a compound index containing both 'status' and 'event_published' fields")
 				.isTrue();
 	}
 

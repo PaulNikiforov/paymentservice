@@ -62,7 +62,7 @@ public class PaymentProcessor {
             return;
         }
         payment.setStatus(result);
-        payment.setUpdatedAt(Instant.now());
+        payment.setTimestamp(Instant.now());
         paymentRepository.save(payment);
     }
 }

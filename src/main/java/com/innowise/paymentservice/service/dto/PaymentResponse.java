@@ -11,6 +11,6 @@ public record PaymentResponse(
         String userId,
         PaymentStatus status,
         BigDecimal paymentAmount,
-        Instant createdAt
+        Instant timestamp
 ) {
 }

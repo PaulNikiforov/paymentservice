@@ -21,12 +21,14 @@ public class PaymentDocument {
 
     @Id
     private String id;
+    @Field("order_id")
     private String orderId;
+    @Field("user_id")
     private String userId;
     private PaymentStatus status;
-    @Field(targetType = FieldType.DECIMAL128)
+    @Field(value = "payment_amount", targetType = FieldType.DECIMAL128)
     private BigDecimal paymentAmount;
+    @Field("event_published")
     private boolean eventPublished;
-    private Instant createdAt;
-    private Instant updatedAt;
+    private Instant timestamp;
 }

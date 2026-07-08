@@ -34,8 +34,7 @@ public class PaymentRepositoryCustomImpl implements PaymentRepositoryCustom {
                 .setOnInsert("status", PaymentStatus.PENDING)
                 .setOnInsert("paymentAmount", amount)
                 .setOnInsert("eventPublished", false)
-                .setOnInsert("createdAt", now)
-                .setOnInsert("updatedAt", now);
+                .setOnInsert("timestamp", now);
         FindAndModifyOptions options = FindAndModifyOptions.options().upsert(true).returnNew(true);
         return mongoTemplate.findAndModify(query, update, options, PaymentDocument.class);
     }
@@ -64,17 +63,17 @@ public class PaymentRepositoryCustomImpl implements PaymentRepositoryCustom {
     public BigDecimal sumSuccessfulPaymentsForUser(String userId, Instant from, Instant to) {
         return sumPaymentAmount(Criteria.where("userId").is(userId)
                 .and("status").is(PaymentStatus.SUCCESS)
-                .and("createdAt").gte(from).lte(to));
+                .and("timestamp").gte(from).lte(to));
     }
 
     @Override
     public BigDecimal sumSuccessfulPaymentsForAllUsers(Instant from, Instant to) {
         return sumPaymentAmount(Criteria.where("status").is(PaymentStatus.SUCCESS)
-                .and("createdAt").gte(from).lte(to));
+                .and("timestamp").gte(from).lte(to));
     }
 
     private BigDecimal sumPaymentAmount(Criteria criteria) {
-        Aggregation aggregation = Aggregation.newAggregation(
+        Aggregation aggregation = Aggregation.newAggregation(PaymentDocument.class,
                 Aggregation.match(criteria),
                 Aggregation.group().sum("paymentAmount").as("total"));
 
