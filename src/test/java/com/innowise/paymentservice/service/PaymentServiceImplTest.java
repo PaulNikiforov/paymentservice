@@ -56,25 +56,22 @@ class PaymentServiceImplTest {
     }
 
     @Test
-    @DisplayName("create: saves PENDING and returns the mapped response")
-    void create_returnsPendingResponseAndSavesDocument() {
+    @DisplayName("create: delegates to the atomic find-or-create-pending upsert and returns the mapped response")
+    void create_returnsPendingResponseFromAtomicUpsert() {
         PaymentRequest request = new PaymentRequest("order-1", AMOUNT);
         String userId = "u1";
-        PaymentDocument pendingDoc = doc(null, userId);
-        PaymentDocument savedDoc = doc("p1", userId);
+        PaymentDocument created = doc("p1", userId);
         PaymentResponse expected = response("p1", userId);
 
-        when(mapper.toPendingDocument(request, userId)).thenReturn(pendingDoc);
-        when(repo.save(pendingDoc)).thenReturn(savedDoc);
-        when(mapper.toResponse(savedDoc)).thenReturn(expected);
+        when(repo.findOrCreatePending("order-1", userId, AMOUNT)).thenReturn(created);
+        when(mapper.toResponse(created)).thenReturn(expected);
 
         PaymentResponse result = service.create(request, userId);
 
         assertThat(result).isEqualTo(expected);
         assertThat(result.status()).isEqualTo(PaymentStatus.PENDING);
-        verify(repo).save(pendingDoc);
-        verify(mapper).toPendingDocument(request, userId);
-        verify(mapper).toResponse(savedDoc);
+        verify(repo).findOrCreatePending("order-1", userId, AMOUNT);
+        verify(mapper).toResponse(created);
     }
 
     @Test
@@ -85,14 +82,13 @@ class PaymentServiceImplTest {
         PaymentDocument existing = doc("p1", userId);
         PaymentResponse expected = response("p1", userId);
 
-        when(repo.findByOrderId("order-1")).thenReturn(Optional.of(existing));
+        when(repo.findOrCreatePending("order-1", userId, AMOUNT)).thenReturn(existing);
         when(mapper.toResponse(existing)).thenReturn(expected);
 
         PaymentResponse result = service.create(request, userId);
 
         assertThat(result).isEqualTo(expected);
         verify(repo, never()).save(any());
-        verify(mapper, never()).toPendingDocument(any(), any());
     }
 
     @Test

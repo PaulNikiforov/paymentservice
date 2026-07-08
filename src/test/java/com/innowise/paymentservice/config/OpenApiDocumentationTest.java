@@ -29,6 +29,7 @@ class OpenApiDocumentationTest {
         mockMvc.perform(get("/api-docs"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paths['/api/v1/payments']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/payments'].post").doesNotExist())
                 .andExpect(jsonPath("$.paths['/api/v1/payments/{id}']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/payments/users/{userId}/summary']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/payments/summary']").exists())

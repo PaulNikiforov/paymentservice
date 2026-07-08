@@ -54,6 +54,33 @@ class PaymentRepositoryTest {
     }
 
     @Test
+    void findOrCreatePending_whenNoPaymentExistsForOrderId_createsNewPendingPayment() {
+        PaymentDocument created = paymentRepository.findOrCreatePending("order-new", "user-1", new BigDecimal("42.50"));
+
+        assertThat(created.getId()).isNotNull();
+        assertThat(created.getOrderId()).isEqualTo("order-new");
+        assertThat(created.getUserId()).isEqualTo("user-1");
+        assertThat(created.getPaymentAmount()).isEqualByComparingTo("42.50");
+        assertThat(created.getStatus()).isEqualTo(PaymentStatus.PENDING);
+        assertThat(created.isEventPublished()).isFalse();
+        assertThat(created.getCreatedAt()).isNotNull();
+        assertThat(created.getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    void findOrCreatePending_whenPaymentAlreadyExistsForOrderId_returnsExistingWithoutDuplicating() {
+        PaymentDocument first = paymentRepository.findOrCreatePending("order-dup", "user-1", new BigDecimal("10.00"));
+
+        PaymentDocument second = paymentRepository.findOrCreatePending("order-dup", "user-1", new BigDecimal("999.00"));
+
+        assertThat(second.getId()).isEqualTo(first.getId());
+        assertThat(second.getPaymentAmount()).isEqualByComparingTo("10.00");
+        assertThat(paymentRepository.findByStatus(PaymentStatus.PENDING, PageRequest.of(0, 50)).getContent())
+                .filteredOn(p -> p.getOrderId().equals("order-dup"))
+                .hasSize(1);
+    }
+
+    @Test
     void paymentAmountIsStoredAsDecimal128NotString() {
         PaymentDocument saved = paymentRepository.save(payment("order-x", "user-x", PaymentStatus.SUCCESS, false));
 

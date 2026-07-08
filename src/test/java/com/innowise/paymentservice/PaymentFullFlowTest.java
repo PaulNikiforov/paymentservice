@@ -103,6 +103,27 @@ class PaymentFullFlowTest {
     }
 
     @Test
+    void createOrderEvent_whenEventFailsValidation_isSentToDeadLetterTopicWithoutCreatingPayment() throws Exception {
+        String recordKey = "order-invalid-1";
+        String malformedJson = """
+                {"orderId":"","userId":"user-x","amount":10.00}
+                """;
+
+        orderEventsProducer.send(new ProducerRecord<>(ORDER_EVENTS_TOPIC, recordKey, malformedJson)).get();
+        orderEventsProducer.flush();
+
+        try (Consumer<String, String> dltConsumer = createDeadLetterConsumer()) {
+            dltConsumer.subscribe(List.of(ORDER_EVENTS_TOPIC + "-dlt"));
+            ConsumerRecord<String, String> deadLettered =
+                    KafkaTestUtils.getSingleRecord(dltConsumer, ORDER_EVENTS_TOPIC + "-dlt", Duration.ofSeconds(40));
+
+            assertThat(deadLettered.key()).isEqualTo(recordKey);
+        }
+
+        assertThat(paymentRepository.findByOrderId("")).isEmpty();
+    }
+
+    @Test
     void createOrderEvent_persistsPendingThenResolvesPayment() throws Exception {
         wireMock.stubFor(get(urlPathEqualTo("/")).willReturn(okForContentType("text/plain", "42\n")));
 
@@ -166,6 +187,15 @@ class PaymentFullFlowTest {
                 .pollInterval(Duration.ofMillis(100))
                 .untilAsserted(() -> assertThat(paymentRepository.findById(paymentId).orElseThrow().getStatus())
                         .isEqualTo(expected));
+    }
+
+    private Consumer<String, String> createDeadLetterConsumer() {
+        Map<String, Object> props = KafkaTestUtils.consumerProps(
+                kafkaContainer.getBootstrapServers(), "payment-full-flow-test-dlt", "true");
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        return new DefaultKafkaConsumerFactory<String, String>(props).createConsumer();
     }
 
     private Consumer<String, PaymentCompletedEvent> createPaymentEventConsumer() {

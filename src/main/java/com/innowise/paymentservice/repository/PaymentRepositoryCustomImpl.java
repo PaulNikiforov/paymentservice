@@ -8,10 +8,12 @@ import org.bson.types.Decimal128;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -21,6 +23,22 @@ import java.util.List;
 public class PaymentRepositoryCustomImpl implements PaymentRepositoryCustom {
 
     private final MongoTemplate mongoTemplate;
+
+    @Override
+    public PaymentDocument findOrCreatePending(String orderId, String userId, BigDecimal amount) {
+        Instant now = Instant.now();
+        Query query = Query.query(Criteria.where("orderId").is(orderId));
+        Update update = new Update()
+                .setOnInsert("orderId", orderId)
+                .setOnInsert("userId", userId)
+                .setOnInsert("status", PaymentStatus.PENDING)
+                .setOnInsert("paymentAmount", amount)
+                .setOnInsert("eventPublished", false)
+                .setOnInsert("createdAt", now)
+                .setOnInsert("updatedAt", now);
+        FindAndModifyOptions options = FindAndModifyOptions.options().upsert(true).returnNew(true);
+        return mongoTemplate.findAndModify(query, update, options, PaymentDocument.class);
+    }
 
     @Override
     public Page<PaymentDocument> findByFilters(String userId, String orderId, PaymentStatus status,
