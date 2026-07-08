@@ -23,11 +23,14 @@ import java.time.Instant;
 public interface PaymentService {
 
     /**
-     * Creates a new payment in {@code PENDING} status for the given user.
+     * Creates a new payment in {@code PENDING} status for the given user, or returns the
+     * existing payment if one already exists for {@code request.orderId()}. Idempotent by
+     * {@code orderId}: the Kafka {@code CREATE_ORDER} consumer may redeliver the same order
+     * at-least-once, and this must not create a second payment for it.
      *
      * @param request the payment creation payload
      * @param userId  the identifier of the user owning the payment
-     * @return the created payment representation
+     * @return the created (or pre-existing) payment representation
      */
     PaymentResponse create(PaymentRequest request, String userId);
 

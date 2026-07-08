@@ -78,6 +78,24 @@ class PaymentServiceImplTest {
     }
 
     @Test
+    @DisplayName("create: existing payment for orderId is returned without creating a duplicate")
+    void create_whenPaymentAlreadyExistsForOrderId_returnsExistingWithoutDuplicating() {
+        PaymentRequest request = new PaymentRequest("order-1", AMOUNT);
+        String userId = "u1";
+        PaymentDocument existing = doc("p1", userId);
+        PaymentResponse expected = response("p1", userId);
+
+        when(repo.findByOrderId("order-1")).thenReturn(Optional.of(existing));
+        when(mapper.toResponse(existing)).thenReturn(expected);
+
+        PaymentResponse result = service.create(request, userId);
+
+        assertThat(result).isEqualTo(expected);
+        verify(repo, never()).save(any());
+        verify(mapper, never()).toPendingDocument(any(), any());
+    }
+
+    @Test
     @DisplayName("getById: missing payment throws PaymentNotFoundException")
     void getById_whenNotFound_throwsPaymentNotFoundException() {
         when(repo.findById("missing")).thenReturn(Optional.empty());

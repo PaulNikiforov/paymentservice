@@ -26,9 +26,13 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PaymentResponse create(PaymentRequest request, String userId) {
-        PaymentDocument pending = paymentMapper.toPendingDocument(request, userId);
-        PaymentDocument saved = paymentRepository.save(pending);
-        return paymentMapper.toResponse(saved);
+        return paymentRepository.findByOrderId(request.orderId())
+                .map(paymentMapper::toResponse)
+                .orElseGet(() -> {
+                    PaymentDocument pending = paymentMapper.toPendingDocument(request, userId);
+                    PaymentDocument saved = paymentRepository.save(pending);
+                    return paymentMapper.toResponse(saved);
+                });
     }
 
     @Override

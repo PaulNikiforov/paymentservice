@@ -10,19 +10,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -69,25 +63,6 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void createPayment_returnsBadRequestWithErrorResponseWhenOrderIdBlank() throws Exception {
-        String requestBody = "{\"orderId\":\"\",\"paymentAmount\":10.00}";
-
-        mockMvc.perform(post("/api/v1/payments")
-                        .with(jwt().jwt(j -> j.claim("sub", "user-1").claim("role", "USER"))
-                                .authorities(new SimpleGrantedAuthority("ROLE_USER")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value(containsString("orderId")))
-                .andExpect(jsonPath("$.path").value("/api/v1/payments"))
-                .andExpect(jsonPath("$.timestamp").exists());
-
-        verify(paymentService, never()).create(any(), any());
-    }
-
-    @Test
     void getById_returnsInternalServerErrorWithErrorResponseForUnexpectedException() throws Exception {
         when(paymentService.getById("payment-1", "user-1", false))
                 .thenThrow(new IllegalStateException("boom - some unexpected internal detail"));
@@ -100,24 +75,6 @@ class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.message").value("Unexpected error"))
                 .andExpect(jsonPath("$.path").value("/api/v1/payments/payment-1"))
                 .andExpect(jsonPath("$.timestamp").exists());
-    }
-
-    @Test
-    void createPayment_returnsBadRequestWithErrorResponseWhenBodyMalformed() throws Exception {
-        String malformedJson = "{\"orderId\":\"order-1\", \"paymentAmount\":}";
-
-        mockMvc.perform(post("/api/v1/payments")
-                        .with(jwt().jwt(j -> j.claim("sub", "user-1").claim("role", "USER"))
-                                .authorities(new SimpleGrantedAuthority("ROLE_USER")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(malformedJson))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.path").value("/api/v1/payments"))
-                .andExpect(jsonPath("$.timestamp").exists());
-
-        verify(paymentService, never()).create(any(), any());
     }
 
     @Test

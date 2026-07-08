@@ -3,7 +3,6 @@ package com.innowise.paymentservice.controller;
 import com.innowise.paymentservice.document.PaymentStatus;
 import com.innowise.paymentservice.service.PaymentService;
 import com.innowise.paymentservice.service.dto.PaymentFilter;
-import com.innowise.paymentservice.service.dto.PaymentRequest;
 import com.innowise.paymentservice.service.dto.PaymentResponse;
 import com.innowise.paymentservice.service.dto.PaymentSummaryResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,28 +10,25 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 
 import java.time.Instant;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST API for payment creation, retrieval, and success-payment summaries.
+ * REST API for payment retrieval and success-payment summaries. Payment creation is not part of
+ * this API — a payment comes into existence only as a reaction to the {@code CREATE_ORDER} Kafka
+ * event (see {@link com.innowise.paymentservice.event.OrderEventListener}, FIX-01).
  *
  * <p>Identity is read from the validated JWT (claims {@code sub}/{@code role}, see
  * {@link com.innowise.paymentservice.config.SecurityConfig}) — regular users may only access
@@ -43,7 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/payments")
 @RequiredArgsConstructor
-@Tag(name = "Payments", description = "Payment creation, retrieval, and success-payment summaries")
+@Tag(name = "Payments", description = "Payment retrieval and success-payment summaries")
 @SecurityRequirement(name = "bearerAuth")
 public class PaymentController {
 
@@ -52,18 +48,6 @@ public class PaymentController {
     private static final String ADMIN_ROLE = "ADMIN";
 
     private final PaymentService paymentService;
-
-    @PostMapping
-    @ResponseStatus(HttpStatus.ACCEPTED)
-    @PreAuthorize("hasAnyRole('USER','ADMIN')")
-    @Operation(summary = "Create a payment", description = "Saves the payment as PENDING; resolution to SUCCESS/FAILED happens asynchronously.")
-    @ApiResponse(responseCode = "202", description = "Payment accepted, processing is asynchronous")
-    @ApiResponse(responseCode = "400", description = "Validation error (missing orderId, non-positive paymentAmount)")
-    @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
-    public PaymentResponse create(@Valid @RequestBody PaymentRequest request,
-                                  @AuthenticationPrincipal Jwt jwt) {
-        return paymentService.create(request, callerUserId(jwt));
-    }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get a payment by id", description = "USER may only fetch their own payment; ADMIN may fetch any.")

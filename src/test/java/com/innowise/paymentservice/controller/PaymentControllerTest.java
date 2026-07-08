@@ -1,6 +1,5 @@
 package com.innowise.paymentservice.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.innowise.paymentservice.DisableMongock;
 import com.innowise.paymentservice.StubJwksUri;
 import com.innowise.paymentservice.config.JwtAuthenticationEntryPoint;
@@ -8,7 +7,6 @@ import com.innowise.paymentservice.config.SecurityConfig;
 import com.innowise.paymentservice.document.PaymentStatus;
 import com.innowise.paymentservice.service.PaymentService;
 import com.innowise.paymentservice.service.dto.PaymentFilter;
-import com.innowise.paymentservice.service.dto.PaymentRequest;
 import com.innowise.paymentservice.service.dto.PaymentResponse;
 import com.innowise.paymentservice.service.dto.PaymentSummaryResponse;
 import org.junit.jupiter.api.Test;
@@ -18,7 +16,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -29,12 +26,9 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -47,38 +41,8 @@ class PaymentControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @MockitoBean
     private PaymentService paymentService;
-
-    @Test
-    void createPayment_returnsAcceptedWithPendingPayment() throws Exception {
-        PaymentRequest request = new PaymentRequest("order-1", new BigDecimal("10.00"));
-        PaymentResponse response = new PaymentResponse(
-                "payment-1",
-                "order-1",
-                "user-1",
-                PaymentStatus.PENDING,
-                new BigDecimal("10.00"),
-                Instant.parse("2026-07-03T00:00:00Z")
-        );
-
-        when(paymentService.create(any(PaymentRequest.class), eq("user-1"))).thenReturn(response);
-
-        mockMvc.perform(post("/api/v1/payments")
-                        .with(jwt().jwt(j -> j.claim("sub", "user-1").claim("role", "USER"))
-                                .authorities(new SimpleGrantedAuthority("ROLE_USER")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.id").value("payment-1"))
-                .andExpect(jsonPath("$.orderId").value("order-1"))
-                .andExpect(jsonPath("$.userId").value("user-1"))
-                .andExpect(jsonPath("$.status").value("PENDING"))
-                .andExpect(jsonPath("$.paymentAmount").value(10.00));
-    }
 
     @Test
     void getById_returnsOkWithPayment() throws Exception {
@@ -182,17 +146,4 @@ class PaymentControllerTest {
                 .andExpect(jsonPath("$.userId").doesNotExist());
     }
 
-    @Test
-    void createPayment_returnsBadRequestWhenOrderIdBlank() throws Exception {
-        String requestBody = "{\"orderId\":\"\",\"paymentAmount\":10.00}";
-
-        mockMvc.perform(post("/api/v1/payments")
-                        .with(jwt().jwt(j -> j.claim("sub", "user-1").claim("role", "USER"))
-                                .authorities(new SimpleGrantedAuthority("ROLE_USER")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isBadRequest());
-
-        verify(paymentService, never()).create(any(), any());
-    }
 }
