@@ -34,11 +34,6 @@ spring:
         jwt:
           jwk-set-uri: ${AUTH_JWKS_URI}
 
-mongock:
-  transactional: false
-  migration-scan-package:
-    - com.innowise.paymentservice.migration
-
 resilience4j:
   circuitbreaker:
     instances:

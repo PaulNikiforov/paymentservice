@@ -40,18 +40,6 @@
 		<sonar.scanner.skipJreProvisioning>true</sonar.scanner.skipJreProvisioning>
 	</properties>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>io.mongock</groupId>
-				<artifactId>mongock-bom</artifactId>
-				<version>5.5.1</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-
 	<dependencies>
 		<!-- Web -->
 		<dependency>
@@ -108,14 +96,15 @@
 			<version>${mapstruct.version}</version>
 		</dependency>
 
-		<!-- Mongock -->
+		<!-- Liquibase (MongoDB extension) -->
 		<dependency>
-			<groupId>io.mongock</groupId>
-			<artifactId>mongock-springboot-v3</artifactId>
+			<groupId>org.liquibase</groupId>
+			<artifactId>liquibase-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>io.mongock</groupId>
-			<artifactId>mongodb-springdata-v4-driver</artifactId>
+			<groupId>org.liquibase.ext</groupId>
+			<artifactId>liquibase-mongodb</artifactId>
+			<version>${liquibase.version}</version>
 		</dependency>
 
 		<!-- Resilience4j -->

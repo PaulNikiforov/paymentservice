@@ -1,5 +1,6 @@
 package com.innowise.paymentservice.repository;
 
+import com.innowise.paymentservice.DisablePaymentMigrations;
 import com.innowise.paymentservice.MongoTestcontainersConfiguration;
 import com.innowise.paymentservice.document.PaymentDocument;
 import com.innowise.paymentservice.document.PaymentStatus;
@@ -14,7 +15,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataMongoTest
 @Import(MongoTestcontainersConfiguration.class)
-@TestPropertySource(properties = "mongock.enabled=false")
+@DisablePaymentMigrations
 class PaymentRepositoryTest {
 
     @Autowired

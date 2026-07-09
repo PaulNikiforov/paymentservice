@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 class PaymentOutboxPublisherTest {
 
     private static final Instant NOW = Instant.parse("2024-01-01T00:00:00Z");
-    private static final String TOPIC = "payment-events";
+    private static final String TOPIC = PaymentOutboxPublisher.TOPIC;
 
     @Mock
     private PaymentRepository paymentRepository;

@@ -52,12 +52,12 @@ class PaymentIndexMigrationTest {
 	}
 
 	@Test
-	void mongockChangeLogShouldRecordTheAppliedIndexMigration() {
-		List<Document> changeLogEntries = mongoTemplate.findAll(Document.class, "mongockChangeLog");
+	void liquibaseChangeLogShouldRecordTheAppliedMigration() {
+		List<Document> changeLogEntries = mongoTemplate.findAll(Document.class, "DATABASECHANGELOG");
 
 		assertThat(changeLogEntries).anySatisfy(entry -> {
-			assertThat(entry.getString("changeId")).isEqualTo("create-payments-indexes");
-			assertThat(entry.getString("state")).isEqualTo("EXECUTED");
+			assertThat(entry.getString("id")).isEqualTo("001-create-payments-collection-and-indexes");
+			assertThat(entry.getString("execType")).isEqualTo("EXECUTED");
 		});
 	}
 

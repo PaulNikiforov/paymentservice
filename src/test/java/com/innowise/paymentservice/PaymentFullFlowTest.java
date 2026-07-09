@@ -8,7 +8,9 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.innowise.paymentservice.document.PaymentDocument;
 import com.innowise.paymentservice.document.PaymentStatus;
+import com.innowise.paymentservice.event.OrderEventListener;
 import com.innowise.paymentservice.event.PaymentCompletedEvent;
+import com.innowise.paymentservice.event.PaymentOutboxPublisher;
 import com.innowise.paymentservice.repository.PaymentRepository;
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -51,8 +53,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @StubJwksUri
 class PaymentFullFlowTest {
 
-    private static final String PAYMENT_EVENTS_TOPIC = "payment-events";
-    private static final String ORDER_EVENTS_TOPIC = "order-events";
+    private static final String PAYMENT_EVENTS_TOPIC = PaymentOutboxPublisher.TOPIC;
+    private static final String ORDER_EVENTS_TOPIC = OrderEventListener.TOPIC;
 
     static WireMockServer wireMock = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort());
 
@@ -165,6 +167,17 @@ class PaymentFullFlowTest {
         }
     }
 
+    /**
+     * Publishes the {@code CREATE_ORDER} event this service consumes.
+     *
+     * <p><b>Manual sync note (same accepted tradeoff as {@code PaymentEventListenerIntegrationTest}'s
+     * {@code PAYMENT_COMPLETED_EVENT_JSON}, see {@code test-coverage-fix-plan-2026-07-05.md} §P2
+     * option B):</b> this JSON is hand-written to match orderservice's {@code kafka.CreateOrderEvent}
+     * record, not consumed from a message orderservice actually produced — there is no automated
+     * contract between the two. If orderservice renames a field on that record, update this literal
+     * to match; {@code orderservice/.../OrderEventOutboxPublisherIntegrationTest} verifies the real
+     * shape orderservice produces, but nothing ties that assertion to this one.
+     */
     private void publishCreateOrderEvent(String orderId, String userId, BigDecimal amount) throws Exception {
         String json = """
                 {"orderId":"%s","userId":"%s","amount":%s}

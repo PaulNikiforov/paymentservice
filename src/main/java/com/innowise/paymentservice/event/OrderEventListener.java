@@ -37,10 +37,12 @@ import java.util.Set;
 @Slf4j
 public class OrderEventListener {
 
+    public static final String TOPIC = "order-events";
+
     private final PaymentService paymentService;
     private final Validator validator;
 
-    @KafkaListener(topics = "order-events", groupId = "paymentservice")
+    @KafkaListener(topics = TOPIC, groupId = "paymentservice")
     public void listen(CreateOrderEvent event) {
         try {
             Set<ConstraintViolation<CreateOrderEvent>> violations = validator.validate(event);

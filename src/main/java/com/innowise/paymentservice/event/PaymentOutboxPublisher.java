@@ -32,7 +32,7 @@ import java.util.concurrent.TimeoutException;
 @Component
 public class PaymentOutboxPublisher {
 
-    private static final String TOPIC = "payment-events";
+    public static final String TOPIC = "payment-events";
     private static final long SEND_TIMEOUT_MS = 5000;
     private static final List<PaymentStatus> RESOLVED_STATUSES =
             List.of(PaymentStatus.SUCCESS, PaymentStatus.FAILED);

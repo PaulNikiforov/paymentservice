@@ -1,6 +1,6 @@
 package com.innowise.paymentservice.controller;
 
-import com.innowise.paymentservice.DisableMongock;
+import com.innowise.paymentservice.DisablePaymentMigrations;
 import com.innowise.paymentservice.StubJwksUri;
 import com.innowise.paymentservice.config.JwtAuthenticationEntryPoint;
 import com.innowise.paymentservice.config.SecurityConfig;
@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(PaymentController.class)
 @Import({SecurityConfig.class, JwtAuthenticationEntryPoint.class})
-@DisableMongock
+@DisablePaymentMigrations
 @StubJwksUri
 class PaymentControllerTest {
 
