@@ -11,12 +11,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import java.time.Instant;
 
-/**
- * Maps every exception the payment API can throw to the platform's unified
- * {@link ErrorResponse} JSON shape: custom domain exceptions to their documented status
- * (404/403), request-binding/parsing failures and bean validation to 400, and anything
- * else to a 500 fallback that never leaks the underlying exception message.
- */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -31,12 +25,6 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request);
     }
 
-    /**
-     * Unlike {@link PaymentAccessDeniedException} (a domain exception with a message already
-     * curated for API consumers), Spring Security's {@link AccessDeniedException} carries an
-     * internal framework message (e.g. naming the denied SpEL expression) that isn't meant to be
-     * exposed to clients — so a fixed, generic message is returned instead of {@code ex.getMessage()}.
-     */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
         return buildResponse(HttpStatus.FORBIDDEN, "Access denied", request);

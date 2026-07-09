@@ -44,10 +44,6 @@ import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Full flow, triggered the way production traffic actually arrives (FIX-01): a {@code CREATE_ORDER}
- * event, not a direct REST call — payment creation has no REST entry point anymore.
- */
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @StubJwksUri
@@ -138,16 +134,6 @@ class PaymentFullFlowTest {
         awaitStatus(created.getId(), PaymentStatus.SUCCESS);
     }
 
-    /**
-     * Verifies the real shape of {@code payment-events} messages this service produces.
-     *
-     * <p><b>Manual sync note:</b> orderservice's consumer-side test
-     * ({@code orderservice/src/test/java/com/innowise/orderservice/kafka/PaymentEventListenerIntegrationTest})
-     * hand-writes a JSON literal mirroring {@link PaymentCompletedEvent} instead of consuming a
-     * message actually produced here — there is no automated contract between the two. If this
-     * test's assertions on {@link PaymentCompletedEvent}'s shape ever change, update that JSON
-     * literal to match.
-     */
     @Test
     void createOrderEvent_publishesPaymentEventToKafka() throws Exception {
         wireMock.stubFor(get(urlPathEqualTo("/")).willReturn(okForContentType("text/plain", "42\n")));
@@ -167,17 +153,6 @@ class PaymentFullFlowTest {
         }
     }
 
-    /**
-     * Publishes the {@code CREATE_ORDER} event this service consumes.
-     *
-     * <p><b>Manual sync note (same accepted tradeoff as {@code PaymentEventListenerIntegrationTest}'s
-     * {@code PAYMENT_COMPLETED_EVENT_JSON}, see {@code test-coverage-fix-plan-2026-07-05.md} §P2
-     * option B):</b> this JSON is hand-written to match orderservice's {@code kafka.CreateOrderEvent}
-     * record, not consumed from a message orderservice actually produced — there is no automated
-     * contract between the two. If orderservice renames a field on that record, update this literal
-     * to match; {@code orderservice/.../OrderEventOutboxPublisherIntegrationTest} verifies the real
-     * shape orderservice produces, but nothing ties that assertion to this one.
-     */
     private void publishCreateOrderEvent(String orderId, String userId, BigDecimal amount) throws Exception {
         String json = """
                 {"orderId":"%s","userId":"%s","amount":%s}

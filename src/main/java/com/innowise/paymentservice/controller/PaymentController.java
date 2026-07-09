@@ -25,17 +25,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * REST API for payment retrieval and success-payment summaries. Payment creation is not part of
- * this API — a payment comes into existence only as a reaction to the {@code CREATE_ORDER} Kafka
- * event (see {@link com.innowise.paymentservice.event.OrderEventListener}, FIX-01).
- *
- * <p>Identity is read from the validated JWT (claims {@code sub}/{@code role}, see
- * {@link com.innowise.paymentservice.config.SecurityConfig}) — regular users may only access
- * their own payments/summary, admins may access any. Ownership checks that depend on the
- * fetched document (e.g. {@link #getById}) are enforced in the service layer, not here;
- * role-only checks that need no document data use {@code @PreAuthorize}.
- */
 @RestController
 @RequestMapping("/api/v1/payments")
 @RequiredArgsConstructor

@@ -15,23 +15,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 
-/**
- * Scheduled poller that resolves {@link PaymentStatus#PENDING} payments by calling the external
- * payment API and persisting the resulting {@link PaymentStatus#SUCCESS}/{@link PaymentStatus#FAILED}
- * status. This is the only place in the codebase allowed to call {@link ExternalPaymentClient#charge}.
- *
- * <p>Infrastructure failure (open circuit, timeout — surfaced as {@link PaymentGatewayException})
- * is not a payment rejection: the document is left untouched and retried on a later tick. Only a
- * real answer from the external API (even/odd) resolves a payment to a terminal status.
- *
- * <p>Publishing the resulting terminal status to Kafka is a separate concern, handled by
- * {@link PaymentOutboxPublisher} — this class never touches {@code eventPublished}.
- *
- * <p>Runs as a single scheduled task on a single-instance deployment, so a plain
- * {@code findByStatus(PENDING, ...)} poll is sufficient: each tick issues exactly one query for a
- * fixed page and there is no concurrent tick that could re-fetch an in-flight document. Distributed
- * locking is a distinct, deliberately deferred concern (YAGNI) if the service is ever scaled out.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor

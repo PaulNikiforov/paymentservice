@@ -24,13 +24,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Covers the OAuth2 Resource Server contract for {@link PaymentController}: authentication
- * (missing/malformed/valid JWT) and role-based authorization ({@code @PreAuthorize}).
- * Ownership-based 403s (USER accessing another user's payment) are covered by
- * {@code PaymentServiceImplTest} and {@code GlobalExceptionHandlerTest} instead, since that
- * logic lives in the service layer, not in the security filter chain.
- */
 @WebMvcTest(PaymentController.class)
 @Import({SecurityConfig.class, JwtAuthenticationEntryPoint.class})
 @DisablePaymentMigrations

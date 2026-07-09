@@ -16,18 +16,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-/**
- * Scheduled publisher that drains the outbox: it polls payments resolved to a terminal status
- * ({@link PaymentStatus#SUCCESS}/{@link PaymentStatus#FAILED}) whose event has not yet been
- * published and sends a {@link PaymentCompletedEvent} to Kafka for each, marking
- * {@code eventPublished=true} only after a confirmed successful send.
- *
- * <p>This is the only place in the codebase allowed to call {@link KafkaTemplate} and the only
- * place that sets {@code eventPublished=true} (Decision 9). The publish-then-mark ordering in
- * {@link #publishOne(PaymentDocument)} is the entire point of the pattern — do not refactor it:
- * a duplicate send (sent but not marked) is harmless because the Order Service consumer is
- * idempotent, but a missed send (marked without sending) loses the event forever.
- */
 @Slf4j
 @Component
 public class PaymentOutboxPublisher {
