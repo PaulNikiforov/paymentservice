@@ -71,11 +71,6 @@ class PaymentFullFlowTest {
         wireMock.stop();
     }
 
-    @BeforeEach
-    void resetStubs() {
-        wireMock.resetAll();
-    }
-
     @Autowired
     private PaymentRepository paymentRepository;
 
@@ -85,7 +80,9 @@ class PaymentFullFlowTest {
     private KafkaProducer<String, String> orderEventsProducer;
 
     @BeforeEach
-    void setUpProducer() {
+    void setUp() {
+        wireMock.resetAll();
+
         Properties props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaContainer.getBootstrapServers());
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
