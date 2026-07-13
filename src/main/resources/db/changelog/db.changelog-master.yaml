@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-payments-collection-and-indexes
+      author: paymentservice
+      changes:
+        - createCollection:
+            collectionName: payments
+        - createIndex:
+            collectionName: payments
+            keys: '{ user_id: 1 }'
+            options: '{ name: "idx_user_id" }'
+        - createIndex:
+            collectionName: payments
+            keys: '{ order_id: 1 }'
+            options: '{ name: "idx_order_id" }'
+        - createIndex:
+            collectionName: payments
+            keys: '{ status: 1 }'
+            options: '{ name: "idx_status" }'
+        - createIndex:
+            collectionName: payments
+            keys: '{ status: 1, event_published: 1 }'
+            options: '{ name: "idx_status_event_published" }'

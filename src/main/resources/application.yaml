@@ -1,3 +1,72 @@
 spring:
   application:
     name: paymentservice
+
+  task:
+    scheduling:
+      pool:
+        size: 2
+
+  data:
+    mongodb:
+      uri: ${MONGO_URI}
+      auto-index-creation: false
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: paymentservice
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.trusted.packages: com.innowise.paymentservice.event
+        spring.json.value.default.type: com.innowise.paymentservice.event.CreateOrderEvent
+        spring.json.use.type.headers: false
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_JWKS_URI}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      externalPaymentApi:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+
+payment:
+  outbox:
+    poll-interval-ms: ${PAYMENT_OUTBOX_POLL_INTERVAL_MS:2000}
+    batch-size: ${PAYMENT_OUTBOX_BATCH_SIZE:50}
+  processor:
+    poll-interval-ms: ${PAYMENT_PROCESSOR_POLL_INTERVAL_MS:2000}
+    batch-size: ${PAYMENT_PROCESSOR_BATCH_SIZE:50}
+  external-api:
+    url: ${EXTERNAL_PAYMENT_API_URL}
+    connect-timeout-ms: ${PAYMENT_EXTERNAL_API_CONNECT_TIMEOUT_MS:2000}
+    read-timeout-ms: ${PAYMENT_EXTERNAL_API_READ_TIMEOUT_MS:5000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: never
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html

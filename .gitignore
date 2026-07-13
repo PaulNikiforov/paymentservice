@@ -4,6 +4,9 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### Environment ###
+.env
+
 ### STS ###
 .apt_generated
 .classpath
@@ -31,3 +34,7 @@ build/
 
 ### VS Code ###
 .vscode/
+*.txt
+*.md
+!README.md
+!readme.md
